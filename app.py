@@ -98,34 +98,44 @@ Seja específico, prático e motivador. Use exemplos reais quando possível."""
     }
     
     # Tenta cada endpoint até encontrar um que funcione
-    last_error = None
+    errors_log = []
+    model_names = [
+        "Gemini 1.5 Flash",
+        "Gemini 1.5 Pro", 
+        "Gemini Pro",
+        "Gemini 1.0 Pro"
+    ]
+    
     for i, url in enumerate(endpoints):
         try:
+            st.info(f"🔄 Tentando conectar com {model_names[i]}...")
             response = requests.post(url, headers=headers, json=data, timeout=30)
-            response.raise_for_status()
-            result = response.json()
             
-            if "candidates" in result and len(result["candidates"]) > 0:
-                # Sucesso! Mostra qual endpoint funcionou
-                st.success(f"✅ Conectado com sucesso! (Endpoint {i+1}/4)")
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-            else:
-                last_error = "Resposta da API não contém o formato esperado."
+            if response.status_code == 200:
+                result = response.json()
+                if "candidates" in result and len(result["candidates"]) > 0:
+                    st.success(f"✅ Conectado com sucesso usando {model_names[i]}!")
+                    return result["candidates"][0]["content"]["parts"][0]["text"]
+            
+            # Se não deu certo, registra o erro
+            errors_log.append(f"❌ {model_names[i]}: HTTP {response.status_code}")
                 
         except requests.exceptions.HTTPError as e:
-            last_error = f"Erro HTTP {e.response.status_code}: {e.response.text}"
+            errors_log.append(f"❌ {model_names[i]}: HTTP {e.response.status_code}")
             continue
         except requests.exceptions.RequestException as e:
-            last_error = f"Erro de conexão: {str(e)}"
+            errors_log.append(f"❌ {model_names[i]}: Erro de conexão")
             continue
         except Exception as e:
-            last_error = f"Erro inesperado: {str(e)}"
+            errors_log.append(f"❌ {model_names[i]}: {str(e)[:50]}")
             continue
     
     # Se nenhum endpoint funcionou
-    return f"""❌ **Não foi possível conectar com a API do Google Gemini.**
+    errors_text = "\n".join(errors_log)
+    return f"""❌ **Não foi possível conectar com nenhum modelo do Google Gemini.**
 
-**Erro:** {last_error}
+**Tentativas realizadas:**
+{errors_text}
 
 **Possíveis soluções:**
 
