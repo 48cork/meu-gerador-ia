@@ -1,6 +1,5 @@
 import streamlit as st
-import requests
-import json
+import google.generativeai as genai
 
 # Configuração da página
 st.set_page_config(
@@ -35,17 +34,45 @@ with st.sidebar:
        - Bio otimizada para Instagram
     """)
 
-# Função para testar endpoints e chamar a API do Google Gemini
+# Função para gerar plano de negócio usando a biblioteca oficial
 def gerar_plano_negocio(investimento, habilidades, meta_ganho, api_key):
-    # Lista de endpoints possíveis (ordem dos mais novos para os mais antigos)
-    endpoints = [
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={api_key}",
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key={api_key}"
-    ]
-    
-    prompt = f"""Você é um consultor de negócios especializado em ajudar pessoas a empreenderem online.
+    try:
+        # Configura a API Key
+        genai.configure(api_key=api_key)
+        
+        # Tenta diferentes modelos em ordem de preferência
+        modelos = [
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+            'gemini-pro'
+        ]
+        
+        model = None
+        modelo_usado = None
+        
+        for nome_modelo in modelos:
+            try:
+                model = genai.GenerativeModel(nome_modelo)
+                modelo_usado = nome_modelo
+                st.info(f"🔄 Conectando com {nome_modelo}...")
+                break
+            except Exception as e:
+                continue
+        
+        if not model:
+            return """❌ **Não foi possível inicializar nenhum modelo.**
+
+**Possíveis causas:**
+1. Sua API Key pode estar inválida ou expirada
+2. O serviço pode estar temporariamente indisponível
+3. Sua região pode ter restrições de acesso
+
+**Solução:**
+- Tente criar uma nova API Key em: https://aistudio.google.com/app/apikey
+- Verifique se o Google AI Studio funciona diretamente no navegador
+- Aguarde alguns minutos e tente novamente"""
+
+        prompt = f"""Você é um consultor de negócios especializado em ajudar pessoas a empreenderem online.
 
 Com base nas informações abaixo, crie um plano de negócio completo e prático:
 
@@ -83,79 +110,55 @@ Por favor, forneça:
 
 Seja específico, prático e motivador. Use exemplos reais quando possível."""
 
-    headers = {"Content-Type": "application/json"}
-    
-    data = {
-        "contents": [{
-            "parts": [{
-                "text": prompt
-            }]
-        }],
-        "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 2048
-        }
-    }
-    
-    # Tenta cada endpoint até encontrar um que funcione
-    errors_log = []
-    model_names = [
-        "Gemini 1.5 Flash",
-        "Gemini 1.5 Pro", 
-        "Gemini Pro",
-        "Gemini 1.0 Pro"
-    ]
-    
-    for i, url in enumerate(endpoints):
-        try:
-            st.info(f"🔄 Tentando conectar com {model_names[i]}...")
-            response = requests.post(url, headers=headers, json=data, timeout=30)
-            
-            if response.status_code == 200:
-                result = response.json()
-                if "candidates" in result and len(result["candidates"]) > 0:
-                    st.success(f"✅ Conectado com sucesso usando {model_names[i]}!")
-                    return result["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Se não deu certo, registra o erro
-            errors_log.append(f"❌ {model_names[i]}: HTTP {response.status_code}")
-                
-        except requests.exceptions.HTTPError as e:
-            errors_log.append(f"❌ {model_names[i]}: HTTP {e.response.status_code}")
-            continue
-        except requests.exceptions.RequestException as e:
-            errors_log.append(f"❌ {model_names[i]}: Erro de conexão")
-            continue
-        except Exception as e:
-            errors_log.append(f"❌ {model_names[i]}: {str(e)[:50]}")
-            continue
-    
-    # Se nenhum endpoint funcionou
-    errors_text = "\n".join(errors_log)
-    return f"""❌ **Não foi possível conectar com nenhum modelo do Google Gemini.**
+        # Gera o conteúdo
+        response = model.generate_content(prompt)
+        
+        st.success(f"✅ Conectado com sucesso usando {modelo_usado}!")
+        return response.text
+        
+    except Exception as e:
+        erro_msg = str(e)
+        
+        if "API_KEY_INVALID" in erro_msg or "invalid API key" in erro_msg.lower():
+            return """❌ **API Key inválida**
 
-**Tentativas realizadas:**
-{errors_text}
+Sua chave parece estar incorreta. Verifique:
 
-**Possíveis soluções:**
+1. Acesse: https://aistudio.google.com/app/apikey
+2. Copie a chave COMPLETA (sem espaços extras)
+3. Cole novamente na barra lateral
+4. Se o problema persistir, delete a chave antiga e crie uma nova"""
 
-1. **Verifique sua API Key:**
-   - Acesse: https://aistudio.google.com/app/apikey
-   - Confirme que a chave está correta e ativa
-   - Tente criar uma nova API Key se necessário
+        elif "RESOURCE_EXHAUSTED" in erro_msg or "quota" in erro_msg.lower():
+            return """❌ **Limite de uso atingido**
 
-2. **Verifique se a API está habilitada:**
-   - Acesse: https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com
-   - Certifique-se de que a API "Generative Language API" está habilitada
+Você atingiu o limite gratuito da API. Soluções:
 
-3. **Verifique limites de uso:**
-   - Sua API Key pode ter atingido o limite de requisições
-   - Aguarde alguns minutos e tente novamente
+1. Aguarde alguns minutos e tente novamente
+2. Crie uma nova API Key
+3. Verifique em: https://aistudio.google.com/app/apikey"""
 
-4. **Tente gerar uma nova API Key:**
-   - Às vezes uma nova chave resolve problemas de configuração
+        elif "PERMISSION_DENIED" in erro_msg:
+            return """❌ **Permissão negada**
 
-Se o problema persistir, me avise o erro exato que apareceu acima."""
+Sua conta pode ter restrições. Verifique:
+
+1. Se o Google AI Studio está disponível no seu país
+2. Se sua conta Google está verificada
+3. Tente acessar diretamente: https://aistudio.google.com/"""
+
+        else:
+            return f"""❌ **Erro ao conectar com a API**
+
+**Detalhes técnicos:** {erro_msg}
+
+**Soluções:**
+1. Verifique se a API Key está correta
+2. Tente criar uma nova API Key
+3. Teste se o Google AI Studio funciona no navegador
+4. Aguarde alguns minutos e tente novamente
+
+Se o erro persistir, copie a mensagem acima e me envie."""
 
 # Formulário principal
 with st.form("formulario_negocio"):
@@ -199,7 +202,7 @@ if submitted:
     elif not habilidades:
         st.error("⚠️ Por favor, descreva suas habilidades.")
     else:
-        with st.spinner("🤖 A IA está criando seu plano personalizado... Testando conexão com a API..."):
+        with st.spinner("🤖 A IA está criando seu plano personalizado... Isso pode levar alguns segundos."):
             resultado = gerar_plano_negocio(investimento, habilidades, meta_ganho, api_key)
             
             st.markdown("---")
