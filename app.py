@@ -37,7 +37,7 @@ with st.sidebar:
 
 # Função para chamar a API do Google Gemini
 def gerar_plano_negocio(investimento, habilidades, meta_ganho, api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
     
     prompt = f"""Você é um consultor de negócios especializado em ajudar pessoas a empreenderem online.
 
