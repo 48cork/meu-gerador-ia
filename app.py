@@ -7,7 +7,6 @@ st.set_page_config(page_title="Business AI Pro", page_icon="💰", layout="wide"
 with st.sidebar:
     st.title("Configuração")
     api_key = st.text_input("Sua Gemini API Key:", type="password")
-    st.info("Obtenha em: aistudio.google.com")
 
 st.title("🚀 Consultoria de Negócios com IA")
 
@@ -24,8 +23,8 @@ if st.button("Gerar Estratégia Profissional"):
         st.error("Por favor, insira sua API Key na lateral!")
     else:
         try:
-            # URL de conexão direta v1
-            url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+            # MUDANÇA AQUI: Trocamos 'gemini-1.5-flash' por 'gemini-pro'
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
             
             headers = {'Content-Type': 'application/json'}
             
@@ -41,7 +40,6 @@ if st.button("Gerar Estratégia Profissional"):
                 response = requests.post(url, headers=headers, json=payload)
                 result = response.json()
                 
-                # Verificação de segurança: se o Google deu erro, mostramos o motivo real
                 if 'error' in result:
                     st.error(f"Erro do Google: {result['error']['message']}")
                 elif 'candidates' in result:
@@ -51,7 +49,7 @@ if st.button("Gerar Estratégia Profissional"):
                     st.write(texto_ia)
                 else:
                     st.error("Resposta inesperada do servidor.")
-                    st.write("Detalhes técnicos:", result) # Isso ajuda a depurar
+                    st.write("Dica: Verifique se sua chave API é válida.")
 
         except Exception as e:
             st.error(f"Erro crítico: {e}")
