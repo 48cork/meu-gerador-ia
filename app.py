@@ -23,7 +23,7 @@ if submit_button:
     else:
         try:
             genai.configure(api_key=api_key)
-            # Linha corrigida com o modelo certo e espaço correto:
+            # Usando a versão mais estável e rápida disponível
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             prompt = f"Aja como um estrategista da Kiwify. Sugira um negócio para quem tem R$ {investimento}, sabe sobre {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. O que buscar na Kiwify, 3. Tráfego, 4. Frase Bio."
@@ -34,5 +34,5 @@ if submit_button:
                 st.subheader("💡 Sua Oportunidade:")
                 st.write(response.text)
         except Exception as e:
-            st.error(f"Erro: {e}")
+            st.error(f"Erro detalhado: {e}")
           
