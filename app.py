@@ -1,6 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-from google.generativeai.types import RequestOptions
 
 st.set_page_config(page_title="Gerador de Negócios IA", page_icon="🚀")
 
@@ -22,19 +21,18 @@ if submit:
         st.error("Por favor, insira sua API Key na barra lateral.")
     else:
         try:
-            # Força a configuração para usar a versão 1 estável explicitamente
+            # Configuração simples e direta
             genai.configure(api_key=api_key)
+            
+            # Usando o nome do modelo sem o prefixo 'models/' para evitar conflito de URL
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             prompt = f"Sugira um negócio para quem tem {invest}, sabe {skill} e quer ganhar {goal}. Liste: 1. Conceito, 2. Kiwify, 3. Tráfego, 4. Bio."
             
             with st.spinner('A IA está pensando...'):
-                # RequestOptions força a API a não usar o caminho v1beta
-                response = model.generate_content(
-                    prompt, 
-                    request_options=RequestOptions(api_version='v1')
-                )
+                response = model.generate_content(prompt)
                 st.markdown("---")
+                st.subheader("💡 Sua Oportunidade:")
                 st.write(response.text)
         except Exception as e:
             st.error(f"Erro: {e}")
