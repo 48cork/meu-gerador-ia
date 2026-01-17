@@ -21,17 +21,19 @@ if submit_button:
         st.error("Por favor, insira sua API Key na barra lateral.")
     else:
         try:
-            # Comando para forçar a versão estável
-            genai.configure(api_key=api_key, transport='rest') 
+            # Força o uso da API estável v1
+            genai.configure(api_key=api_key)
+            
+            # Seleciona o modelo Flash de produção
             model = genai.GenerativeModel('gemini-1.5-flash')
             
-            prompt = f"Sugira um negócio para quem tem R$ {investimento}, sabe {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. Kiwify, 3. Tráfego, 4. Bio."
+            prompt = f"Aja como estrategista. Sugira um negócio para quem tem R$ {investimento}, sabe {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. Kiwify, 3. Tráfego, 4. Bio."
             
-            with st.spinner('IA analisando...'):
+            with st.spinner('IA analisando oportunidades...'):
+                # Chamada direta sem parâmetros extras que causam conflito
                 response = model.generate_content(prompt)
                 st.markdown("---")
+                st.subheader("💡 Sua Oportunidade:")
                 st.write(response.text)
         except Exception as e:
-            st.error(f"Erro: {e}")
-            st.error(f"Erro ao conectar com a IA: {e}")
-   
+            st.error(f"Erro de conexão: {e}")
