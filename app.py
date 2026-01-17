@@ -1,4 +1,5 @@
-import streamlit as st
+
+                import streamlit as st
 import requests
 import json
 
@@ -7,6 +8,7 @@ st.set_page_config(page_title="Business AI Pro", page_icon="💰", layout="wide"
 with st.sidebar:
     st.title("Configuração")
     api_key = st.text_input("Sua Gemini API Key:", type="password")
+    st.info("Obtenha em: aistudio.google.com")
 
 st.title("🚀 Consultoria de Negócios com IA")
 
@@ -23,8 +25,8 @@ if st.button("Gerar Estratégia Profissional"):
         st.error("Por favor, insira sua API Key na lateral!")
     else:
         try:
-            # AQUI ESTÁ A MUDANÇA: Usamos 'gemini-pro' e a versão 'v1beta'
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+            # ESTA É A URL EXATA QUE O GOOGLE EXIGE EM 2026
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
             
             headers = {'Content-Type': 'application/json'}
             
@@ -36,19 +38,22 @@ if st.button("Gerar Estratégia Profissional"):
                 }]
             }
 
-            with st.spinner('O Gemini Pro está analisando seu mercado...'):
+            with st.spinner('Conectando ao cérebro da IA...'):
                 response = requests.post(url, headers=headers, json=payload)
                 result = response.json()
                 
                 if 'error' in result:
+                    # Se der erro, vamos mostrar exatamente o que o Google diz
                     st.error(f"Erro do Google: {result['error']['message']}")
+                    st.info("Dica: Verifique se sua chave foi criada no site aistudio.google.com")
                 elif 'candidates' in result:
                     texto_ia = result['candidates'][0]['content']['parts'][0]['text']
                     st.markdown("---")
-                    st.success("### ✅ Estratégia Gerada pelo Gemini Pro")
+                    st.success("### ✅ Plano de Negócio Gerado")
                     st.write(texto_ia)
                 else:
-                    st.error("Resposta inesperada. Verifique se sua chave API está ativa.")
+                    st.error("Ocorreu um erro inesperado.")
+                    st.write("Resposta do servidor:", result)
 
         except Exception as e:
             st.error(f"Erro de conexão: {e}")
