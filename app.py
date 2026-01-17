@@ -41,10 +41,10 @@ def gerar_plano_negocio(investimento, habilidades, meta_ganho, api_key):
         genai.configure(api_key=api_key)
         
         # Tenta diferentes modelos em ordem de preferência
+        # Usando apenas modelos disponíveis no free tier global
         modelos = [
-            'gemini-1.5-flash',
-            'gemini-1.5-pro',
-            'gemini-pro'
+            'gemini-pro',
+            'models/gemini-pro'
         ]
         
         model = None
