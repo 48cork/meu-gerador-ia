@@ -23,7 +23,7 @@ if st.button("Gerar Estratégia Profissional"):
         st.error("Por favor, insira sua API Key na lateral!")
     else:
         try:
-            # MUDANÇA AQUI: Trocamos 'gemini-1.5-flash' por 'gemini-pro'
+            # AQUI ESTÁ A MUDANÇA: Usamos 'gemini-pro' e a versão 'v1beta'
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
             
             headers = {'Content-Type': 'application/json'}
@@ -36,7 +36,7 @@ if st.button("Gerar Estratégia Profissional"):
                 }]
             }
 
-            with st.spinner('Solicitando plano à IA...'):
+            with st.spinner('O Gemini Pro está analisando seu mercado...'):
                 response = requests.post(url, headers=headers, json=payload)
                 result = response.json()
                 
@@ -45,11 +45,10 @@ if st.button("Gerar Estratégia Profissional"):
                 elif 'candidates' in result:
                     texto_ia = result['candidates'][0]['content']['parts'][0]['text']
                     st.markdown("---")
-                    st.success("### ✅ Seu Plano de Negócio")
+                    st.success("### ✅ Estratégia Gerada pelo Gemini Pro")
                     st.write(texto_ia)
                 else:
-                    st.error("Resposta inesperada do servidor.")
-                    st.write("Dica: Verifique se sua chave API é válida.")
+                    st.error("Resposta inesperada. Verifique se sua chave API está ativa.")
 
         except Exception as e:
-            st.error(f"Erro crítico: {e}")
+            st.error(f"Erro de conexão: {e}")
