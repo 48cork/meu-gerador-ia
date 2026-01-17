@@ -9,11 +9,10 @@ with st.sidebar:
     st.info("Obtenha sua chave gratuita em: aistudio.google.com")
 
 st.title("🚀 Gerador de Ideias de Negócios")
-st.write("Transforme seu perfil em um plano de negócios lucrativo.")
 
 with st.form("meu_formulario"):
     investimento = st.text_input("Quanto você tem para investir? (Ex: R$ 500)")
-    habilidades = st.text_input("Quais suas habilidades/hobbies? (Ex: Cozinha, Internet)")
+    habilidades = st.text_input("Quais suas habilidades? (Ex: Cozinha, Internet)")
     objetivo = st.text_input("Quanto quer ganhar por mês? (Ex: R$ 3000)")
     submit_button = st.form_submit_button(label='Gerar Plano de Negócio')
 
@@ -22,17 +21,17 @@ if submit_button:
         st.error("Por favor, insira sua API Key na barra lateral.")
     else:
         try:
-            genai.configure(api_key=api_key)
-            # Alteração para a versão de produção estável:
-            model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
+            # Comando para forçar a versão estável
+            genai.configure(api_key=api_key, transport='rest') 
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            prompt = f"Aja como um estrategista de vendas. Sugira um negócio para quem tem R$ {investimento}, sabe sobre {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. O que buscar na Kiwify, 3. Tráfego, 4. Frase Bio."
+            prompt = f"Sugira um negócio para quem tem R$ {investimento}, sabe {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. Kiwify, 3. Tráfego, 4. Bio."
             
             with st.spinner('IA analisando...'):
                 response = model.generate_content(prompt)
                 st.markdown("---")
-                st.subheader("💡 Sua Oportunidade:")
                 st.write(response.text)
         except Exception as e:
+            st.error(f"Erro: {e}")
             st.error(f"Erro ao conectar com a IA: {e}")
    
