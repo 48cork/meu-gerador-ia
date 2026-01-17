@@ -7,6 +7,7 @@ st.set_page_config(page_title="Business AI Pro", page_icon="💰", layout="wide"
 with st.sidebar:
     st.title("Configuração")
     api_key = st.text_input("Sua Gemini API Key:", type="password")
+    st.info("Obtenha em: aistudio.google.com")
 
 st.title("🚀 Consultoria de Negócios com IA")
 
@@ -14,44 +15,43 @@ col1, col2, col3 = st.columns(3)
 with col1:
     invest = st.text_input("Investimento (R$)", value="500")
 with col2:
-    skill = st.text_input("Habilidade", value="Cozinha")
+    skill = st.text_input("Habilidade", value="Internet")
 with col3:    
     goal = st.text_input("Meta Mensal (R$)", value="3000")
 
 if st.button("Gerar Estratégia Profissional"):
     if not api_key:
-        st.error("Insira sua API Key!")
+        st.error("Por favor, insira sua API Key na lateral!")
     else:
         try:
-            # Endereço DIRETO da API v1 (Aqui não tem erro de v1beta!)
+            # URL de conexão direta v1
             url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
             
             headers = {'Content-Type': 'application/json'}
             
-            prompt = f"Crie um plano de negócio para: Investimento R$ {invest}, Habilidade {skill}, Meta R$ {goal}. Responda EXCLUSIVAMENTE em JSON com as chaves: 'nome_negocio', 'conceito', 'passo_a_passo', 'estrategia_kiwify', 'bio_insta'."
+            prompt = f"Sugira um negócio para quem tem R$ {invest}, sabe {skill} e quer ganhar R$ {goal}. Responda em Português, de forma curta e organizada."
             
             payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"response_mime_type": "application/json"}
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }]
             }
 
-            with st.spinner('Conectando diretamente ao satélite da IA...'):
+            with st.spinner('Solicitando plano à IA...'):
                 response = requests.post(url, headers=headers, json=payload)
                 result = response.json()
                 
-                # Extraindo o texto do JSON que o Google envia
-                texto_ia = result['candidates'][0]['content']['parts'][0]['text']
-                dados = json.loads(texto_ia)
-                
-                st.success(f"### Negócio: {dados['nome_negocio']}")
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.info(f"**💡 Conceito:**\n\n{dados['conceito']}")
-                    st.warning(f"**🎯 Estratégia Kiwify:**\n\n{dados['estrategia_kiwify']}")
-                with c2:
-                    st.success(f"**📝 Passo a Passo:**\n\n{dados['passo_a_passo']}")
-                    st.code(f"Bio Sugerida:\n{dados['bio_insta']}", language="text")
+                # Verificação de segurança: se o Google deu erro, mostramos o motivo real
+                if 'error' in result:
+                    st.error(f"Erro do Google: {result['error']['message']}")
+                elif 'candidates' in result:
+                    texto_ia = result['candidates'][0]['content']['parts'][0]['text']
+                    st.markdown("---")
+                    st.success("### ✅ Seu Plano de Negócio")
+                    st.write(texto_ia)
+                else:
+                    st.error("Resposta inesperada do servidor.")
+                    st.write("Detalhes técnicos:", result) # Isso ajuda a depurar
 
         except Exception as e:
-            st.error(f"Erro na conexão direta: {e}")
-            st.write("Resposta do servidor:", result) # Isso nos ajudará a ver o que houve
+            st.error(f"Erro crítico: {e}")
