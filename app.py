@@ -8,7 +8,7 @@ with st.sidebar:
     api_key = st.text_input("Insira sua Gemini API Key:", type="password")
     st.info("Obtenha sua chave gratuita em: aistudio.google.com")
 
-st.title("🚀 Gerador de Ideias de Negócios 2026")
+st.title("🚀 Gerador de Ideias de Negócios")
 st.write("Transforme seu perfil em um plano de negócios lucrativo.")
 
 with st.form("meu_formulario"):
@@ -22,18 +22,17 @@ if submit_button:
         st.error("Por favor, insira sua API Key na barra lateral.")
     else:
         try:
-            # Configuração forçando a versão estável da API
             genai.configure(api_key=api_key)
+            # Alteração para a versão de produção estável:
+            model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
             
-            # Mudança estratégica no nome do modelo para garantir compatibilidade
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            prompt = f"Aja como um estrategista de vendas. Sugira um negócio para quem tem R$ {investimento}, sabe sobre {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. O que buscar na Kiwify, 3. Tráfego, 4. Frase Bio."
             
-            prompt = f"Aja como um estrategista da Kiwify. Sugira um negócio para quem tem R$ {investimento}, sabe sobre {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. O que buscar na Kiwify, 3. Tráfego, 4. Frase Bio."
-            
-            with st.spinner('A IA está analisando as oportunidades agora...'):
+            with st.spinner('IA analisando...'):
                 response = model.generate_content(prompt)
                 st.markdown("---")
                 st.subheader("💡 Sua Oportunidade:")
                 st.write(response.text)
         except Exception as e:
-            st.error(f"Erro detalhado: {e}")
+            st.error(f"Erro ao conectar com a IA: {e}")
+   
