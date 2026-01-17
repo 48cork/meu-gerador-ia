@@ -22,17 +22,18 @@ if submit_button:
         st.error("Por favor, insira sua API Key na barra lateral.")
     else:
         try:
+            # Configuração forçando a versão estável da API
             genai.configure(api_key=api_key)
-            # Usando a versão mais estável e rápida disponível
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # Mudança estratégica no nome do modelo para garantir compatibilidade
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             
             prompt = f"Aja como um estrategista da Kiwify. Sugira um negócio para quem tem R$ {investimento}, sabe sobre {habilidades} e quer ganhar R$ {objetivo}. Liste: 1. Conceito, 2. O que buscar na Kiwify, 3. Tráfego, 4. Frase Bio."
             
-            with st.spinner('Analisando oportunidades...'):
+            with st.spinner('A IA está analisando as oportunidades agora...'):
                 response = model.generate_content(prompt)
                 st.markdown("---")
                 st.subheader("💡 Sua Oportunidade:")
                 st.write(response.text)
         except Exception as e:
             st.error(f"Erro detalhado: {e}")
-          
