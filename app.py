@@ -28,7 +28,7 @@ if submit_button:
         try:
             # Configura a IA com a chave fornecida
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+           model = genai.GenerativeModel('gemini-1.5-flash')
             
             # O Prompt estratégico focado na Kiwify
             prompt = f"""
