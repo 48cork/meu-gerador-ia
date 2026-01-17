@@ -22,55 +22,82 @@ with st.sidebar:
         help="Cole aqui sua API Key do Google AI Studio (https://aistudio.google.com/app/apikey)"
     )
     
+    # Botão para listar modelos disponíveis
+    if api_key:
+        if st.button("🔍 Descobrir Modelos Disponíveis"):
+            try:
+                genai.configure(api_key=api_key)
+                st.write("**Modelos disponíveis para sua API Key:**")
+                modelos = genai.list_models()
+                modelos_texto = []
+                for m in modelos:
+                    if 'generateContent' in m.supported_generation_methods:
+                        modelos_texto.append(f"✅ {m.name}")
+                        st.success(f"✅ {m.name}")
+                
+                if not modelos_texto:
+                    st.error("❌ Nenhum modelo disponível para generateContent")
+                    
+            except Exception as e:
+                st.error(f"Erro ao listar modelos: {str(e)}")
+    
     st.markdown("---")
     st.markdown("### 📚 Como usar:")
     st.markdown("""
     1. Insira sua API Key do Google AI
-    2. Preencha o formulário
-    3. Clique em 'Gerar Plano de Negócio'
-    4. Receba um plano completo com:
-       - Ideia de negócio personalizada
-       - Estratégia de vendas na Kiwify
-       - Bio otimizada para Instagram
+    2. Clique em "Descobrir Modelos" para ver quais estão disponíveis
+    3. Preencha o formulário abaixo
+    4. Clique em 'Gerar Plano de Negócio'
     """)
 
-# Função para gerar plano de negócio usando a biblioteca oficial
+# Função para gerar plano de negócio
 def gerar_plano_negocio(investimento, habilidades, meta_ganho, api_key):
     try:
         # Configura a API Key
         genai.configure(api_key=api_key)
         
-        # Tenta diferentes modelos em ordem de preferência
-        # Usando apenas modelos disponíveis no free tier global
-        modelos = [
-            'gemini-pro',
-            'models/gemini-pro'
-        ]
+        # Lista TODOS os modelos disponíveis e tenta usar o primeiro que suporta generateContent
+        st.info("🔄 Procurando modelo disponível...")
         
+        modelos_disponiveis = genai.list_models()
         model = None
         modelo_usado = None
         
-        for nome_modelo in modelos:
-            try:
-                model = genai.GenerativeModel(nome_modelo)
-                modelo_usado = nome_modelo
-                st.info(f"🔄 Conectando com {nome_modelo}...")
-                break
-            except Exception as e:
-                continue
+        for m in modelos_disponiveis:
+            if 'generateContent' in m.supported_generation_methods:
+                try:
+                    model = genai.GenerativeModel(m.name)
+                    modelo_usado = m.name
+                    st.info(f"🎯 Usando modelo: {m.name}")
+                    break
+                except:
+                    continue
         
         if not model:
-            return """❌ **Não foi possível inicializar nenhum modelo.**
+            return """❌ **Nenhum modelo disponível encontrado**
 
-**Possíveis causas:**
-1. Sua API Key pode estar inválida ou expirada
-2. O serviço pode estar temporariamente indisponível
-3. Sua região pode ter restrições de acesso
+Sua API Key não tem acesso a modelos que suportam geração de conteúdo.
 
-**Solução:**
-- Tente criar uma nova API Key em: https://aistudio.google.com/app/apikey
-- Verifique se o Google AI Studio funciona diretamente no navegador
-- Aguarde alguns minutos e tente novamente"""
+**Soluções:**
+
+1. **Crie uma NOVA API Key:**
+   - Acesse: https://aistudio.google.com/app/apikey
+   - Delete a chave atual
+   - Crie uma nova chave
+   - Cole aqui e teste novamente
+
+2. **Verifique sua região:**
+   - Alguns países têm restrições
+   - Tente usar uma VPN conectada aos EUA
+
+3. **Teste no Google AI Studio:**
+   - Acesse: https://aistudio.google.com/
+   - Tente gerar texto diretamente
+   - Se funcionar lá, o problema pode estar na nossa integração
+
+4. **Verifique sua conta Google:**
+   - Algumas contas novas têm limitações temporárias
+   - Aguarde 24h e tente novamente"""
 
         prompt = f"""Você é um consultor de negócios especializado em ajudar pessoas a empreenderem online.
 
@@ -113,52 +140,22 @@ Seja específico, prático e motivador. Use exemplos reais quando possível."""
         # Gera o conteúdo
         response = model.generate_content(prompt)
         
-        st.success(f"✅ Conectado com sucesso usando {modelo_usado}!")
+        st.success(f"✅ Plano gerado com sucesso usando {modelo_usado}!")
         return response.text
         
     except Exception as e:
         erro_msg = str(e)
         
-        if "API_KEY_INVALID" in erro_msg or "invalid API key" in erro_msg.lower():
-            return """❌ **API Key inválida**
-
-Sua chave parece estar incorreta. Verifique:
-
-1. Acesse: https://aistudio.google.com/app/apikey
-2. Copie a chave COMPLETA (sem espaços extras)
-3. Cole novamente na barra lateral
-4. Se o problema persistir, delete a chave antiga e crie uma nova"""
-
-        elif "RESOURCE_EXHAUSTED" in erro_msg or "quota" in erro_msg.lower():
-            return """❌ **Limite de uso atingido**
-
-Você atingiu o limite gratuito da API. Soluções:
-
-1. Aguarde alguns minutos e tente novamente
-2. Crie uma nova API Key
-3. Verifique em: https://aistudio.google.com/app/apikey"""
-
-        elif "PERMISSION_DENIED" in erro_msg:
-            return """❌ **Permissão negada**
-
-Sua conta pode ter restrições. Verifique:
-
-1. Se o Google AI Studio está disponível no seu país
-2. Se sua conta Google está verificada
-3. Tente acessar diretamente: https://aistudio.google.com/"""
-
-        else:
-            return f"""❌ **Erro ao conectar com a API**
+        return f"""❌ **Erro ao gerar o plano de negócio**
 
 **Detalhes técnicos:** {erro_msg}
 
-**Soluções:**
-1. Verifique se a API Key está correta
-2. Tente criar uma nova API Key
-3. Teste se o Google AI Studio funciona no navegador
-4. Aguarde alguns minutos e tente novamente
+**Próximos passos:**
 
-Se o erro persistir, copie a mensagem acima e me envie."""
+1. Clique no botão "🔍 Descobrir Modelos Disponíveis" na barra lateral
+2. Veja quais modelos aparecem como disponíveis
+3. Me envie essa lista para eu ajustar o código
+4. Se nenhum modelo aparecer, crie uma nova API Key"""
 
 # Formulário principal
 with st.form("formulario_negocio"):
@@ -223,7 +220,8 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; font-size: 0.9em;'>
-    Criado com ❤️ usando Streamlit e Google Gemini AI
+    Criado com ❤️ usando Streamlit e Google Gemini AI<br>
+    <small>💡 Dica: Clique em "Descobrir Modelos Disponíveis" para diagnosticar problemas</small>
     </div>
     """,
     unsafe_allow_html=True
