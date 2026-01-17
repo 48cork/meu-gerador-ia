@@ -37,12 +37,12 @@ with st.sidebar:
 
 # Função para testar endpoints e chamar a API do Google Gemini
 def gerar_plano_negocio(investimento, habilidades, meta_ganho, api_key):
-    # Lista de endpoints possíveis
+    # Lista de endpoints possíveis (ordem dos mais novos para os mais antigos)
     endpoints = [
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}",
-        f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key={api_key}",
+        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
+        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={api_key}",
         f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
-        f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={api_key}"
+        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key={api_key}"
     ]
     
     prompt = f"""Você é um consultor de negócios especializado em ajudar pessoas a empreenderem online.
