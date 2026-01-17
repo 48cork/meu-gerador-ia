@@ -9,13 +9,36 @@ st.set_page_config(
     layout="centered"
 )
 
-# Configuração automática da API Key (dos Secrets do Streamlit)
+# Configuração da API Key (tenta Secrets, se não houver pede ao usuário)
+api_key = None
+
+# Tenta pegar dos Secrets primeiro
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=api_key)
-except Exception as e:
-    st.error("⚠️ Erro na configuração da API. Entre em contato com o administrador.")
-    st.stop()
+except:
+    # Se não houver nos Secrets, verifica se já está na sessão
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = None
+
+# Se não tem API Key, mostra campo para o administrador configurar
+if not api_key and not st.session_state.api_key:
+    with st.sidebar:
+        st.warning("⚙️ Configuração necessária")
+        temp_key = st.text_input(
+            "API Key do Google AI",
+            type="password",
+            help="Cole sua API Key aqui. Ela será salva apenas durante esta sessão."
+        )
+        if temp_key:
+            st.session_state.api_key = temp_key
+            st.rerun()
+        else:
+            st.info("💡 **Para administradores:** Configure a API Key nos Secrets do Streamlit para o app funcionar automaticamente.")
+            st.stop()
+
+# Configura a API
+final_key = api_key if api_key else st.session_state.api_key
+genai.configure(api_key=final_key)
 
 # Título e descrição
 st.title("💰 Máquina de Arbitragem de Lucro")
