@@ -1,31 +1,59 @@
 import streamlit as st
 import google.generativeai as genai
+import json
 
-st.set_page_config(page_title="Gerador de Negócios IA", page_icon="🚀")
+st.set_page_config(page_title="Business AI Pro", page_icon="💰", layout="wide")
 
+# Interface lateral
 with st.sidebar:
     st.title("Configuração")
-    api_key = st.text_input("Insira sua Gemini API Key:", type="password")
+    api_key = st.text_input("Sua Gemini API Key:", type="password")
 
-st.title("🚀 Gerador de Ideias de Negócios")
+st.title("🚀 Consultoria de Negócios com IA")
+st.write("Gere um plano estruturado em segundos.")
 
-with st.form("meu_formulario"):
-    invest = st.text_input("Investimento (Ex: R$ 500)")
-    skill = st.text_input("Habilidades (Ex: Internet)")
-    goal = st.text_input("Meta (Ex: R$ 3000)")
-    submit = st.form_submit_button(label='Gerar Plano')
+# Formulário de entrada
+col1, col2, col3 = st.columns(3)
+with col1:
+    invest = st.text_input("Investimento (R$)", value="500")
+with col2:
+    skill = st.text_input("Habilidade", value="Cozinha")
+with col3:
+    goal = st.text_input("Meta Mensal (R$)", value="3000")
 
-if submit:
+if st.button("Gerar Estratégia Profissional"):
     if not api_key:
-        st.error("Insira a API Key na barra lateral.")
+        st.error("Insira sua API Key na lateral!")
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            prompt = f"Sugira um negócio para quem tem {invest}, sabe {skill} e quer ganhar {goal}. Liste: 1. Conceito, 2. Kiwify, 3. Tráfego, 4. Bio."
+            # Configura a IA para responder estritamente em JSON
+            model = genai.GenerativeModel(
+                model_name='gemini-1.5-flash',
+                generation_config={"response_mime_type": "application/json"}
+            )
             
-            with st.spinner('Gerando...'):
+            prompt = f"""
+            Crie um plano de negócio para: Investimento R$ {invest}, Habilidade {skill}, Meta R$ {goal}.
+            Responda EXCLUSIVAMENTE no formato JSON com as chaves: 
+            'nome_negocio', 'conceito', 'passo_a_passo', 'estrategia_kiwify', 'bio_insta'.
+            """
+            
+            with st.spinner('Processando dados...'):
                 response = model.generate_content(prompt)
-                st.write(response.text)
+                # Transforma o texto da IA em um objeto JSON (dicionário)
+                dados = json.loads(response.text)
+                
+                # Exibição organizada na tela
+                st.success(f"### Negócio: {dados['nome_negocio']}")
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.info(f"**💡 Conceito:**\n\n{dados['conceito']}")
+                    st.warning(f"**🎯 Estratégia Kiwify:**\n\n{dados['estrategia_kiwify']}")
+                with c2:
+                    st.success(f"**📝 Passo a Passo:**\n\n{dados['passo_a_passo']}")
+                    st.code(f"Bio Sugerida:\n{dados['bio_insta']}", language="text")
+
         except Exception as e:
-            st.error(f"Erro: {e}")
+            st.error(f"Erro na geração: {e}")
