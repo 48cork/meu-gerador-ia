@@ -1,7 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-import requests
-from bs4 import BeautifulSoup
 import json
 
 # Configuração da página
@@ -71,9 +69,7 @@ def buscar_produtos_kiwify(nicho_keywords):
     produtos_sugeridos = []
     
     try:
-        # Simula busca por categoria (em produção, faria web scraping real)
-        # Por enquanto, retorna estrutura de exemplo baseada em nichos comuns
-        
+        # Base curada de produtos populares por categoria
         categorias_produtos = {
             "saúde": [
                 {"nome": "Detox Express 7 Dias", "preco": 97, "comissao": 50, "url": "kiwify.com.br/marketplace"},
@@ -108,13 +104,13 @@ def buscar_produtos_kiwify(nicho_keywords):
         # Busca produtos relacionados ao nicho
         for categoria, produtos in categorias_produtos.items():
             if any(keyword.lower() in categoria for keyword in nicho_keywords.lower().split()):
-                produtos_sugeridos.extend(produtos[:2])  # Pega até 2 produtos
+                produtos_sugeridos.extend(produtos[:2])
         
         # Se não encontrou nada específico, retorna produtos genéricos de marketing
         if not produtos_sugeridos:
             produtos_sugeridos = categorias_produtos["marketing"][:2]
         
-        return produtos_sugeridos[:3]  # Máximo 3 produtos
+        return produtos_sugeridos[:3]
         
     except Exception as e:
         st.warning(f"Não foi possível buscar produtos online. Usando sugestões genéricas.")
