@@ -92,14 +92,16 @@ def main():
             "💰 Preço de COMPRA por unidade (R$)",
             min_value=0.01,
             value=3000.0,
-            step=10.0
+            step=10.0,
+            help="Preço unitário do produto na plataforma de compra"
         )
         
         frete_compra = st.number_input(
             "🚚 Frete de COMPRA (R$)",
             min_value=0.0,
             value=50.0,
-            step=5.0
+            step=5.0,
+            help="Custo do frete para receber o produto"
         )
     
     with col_venda:
@@ -118,7 +120,8 @@ def main():
             "💰 Preço de VENDA por unidade (R$)",
             min_value=0.01,
             value=3500.0,
-            step=10.0
+            step=10.0,
+            help="Preço unitário que você vai cobrar na venda"
         )
         
         frete_venda = st.number_input(
@@ -189,8 +192,8 @@ def main():
     
     st.markdown("---")
     
-    # BOTÃO DE CÁLCULO - CORRIGIDO: use_container_width -> width='stretch'
-    if st.button("🧮 CALCULAR LUCRO DA ARBITRAGEM", type="primary", width='stretch'):
+    # BOTÃO DE CÁLCULO
+    if st.button("🧮 CALCULAR LUCRO DA ARBITRAGEM", type="primary", use_container_width=True):
         calcular_arbitragem_produto(
             produto, categoria, codigo, quantidade,
             plataforma_compra, preco_compra, frete_compra,
@@ -222,7 +225,7 @@ def main():
         1. **Comece com produtos pequenos** para testar
         2. **Calcule TODOS os custos** antes de comprar
         3. **Verifique políticas de devolução**
-            4. **Mantenha margem de segurança** de pelo menos 10%
+        4. **Mantenha margem de segurança** de pelo menos 10%
         5. **Diversifique** entre diferentes produtos
         """)
     
@@ -238,34 +241,60 @@ def calcular_arbitragem_produto(
     """Calcula o lucro de arbitragem entre plataformas"""
     
     try:
-        # CÁLCULOS BÁSICOS
-        custo_total_compra = (preco_compra * quantidade) + frete_compra
-        receita_bruta_venda = (preco_venda * quantidade) + (frete_venda * quantidade)
+        # VALIDAÇÕES DE SEGURANÇA
+        if preco_compra <= 0 or preco_venda <= 0:
+            st.error("❌ **ERRO:** Preços devem ser maiores que zero")
+            return
         
-        # CUSTOS DE VENDA
-        comissao_valor = receita_bruta_venda * (comissao_percent / 100)
-        custos_totais = (custo_embalagem + custo_anuncio + mao_obra + outros_custos) * quantidade
+        if quantidade <= 0:
+            st.error("❌ **ERRO:** Quantidade deve ser maior que zero")
+            return
         
-        # LUCRO BRUTO E LÍQUIDO
-        lucro_bruto = receita_bruta_venda - custo_total_compra - comissao_valor - custos_totais
+        if comissao_percent < 0 or comissao_percent > 100:
+            st.error("❌ **ERRO:** Comissão deve estar entre 0% e 100%")
+            return
         
-        # IMPOSTO SOBRE O LUCRO
-        imposto_valor = max(0, lucro_bruto * (imposto_percent / 100))
-        lucro_liquido = lucro_bruto - imposto_valor
+        if imposto_percent < 0 or imposto_percent > 100:
+            st.error("❌ **ERRO:** Imposto deve estar entre 0% e 100%")
+            return
         
-        # CÁLCULO DE MARGEM
-        margem_bruta_percent = (lucro_bruto / custo_total_compra) * 100 if custo_total_compra > 0 else 0
-        margem_liquida_percent = (lucro_liquido / custo_total_compra) * 100 if custo_total_compra > 0 else 0
-        roi_percent = (lucro_liquido / custo_total_compra) * 100 if custo_total_compra > 0 else 0
+        # CÁLCULOS BÁSICOS (com arredondamento)
+        custo_total_compra = round((preco_compra * quantidade) + frete_compra, 2)
+        receita_bruta_venda = round((preco_venda * quantidade) + (frete_venda * quantidade), 2)
+        
+        # CUSTOS DE VENDA (com arredondamento)
+        comissao_valor = round(receita_bruta_venda * (comissao_percent / 100), 2)
+        custos_totais = round((custo_embalagem + custo_anuncio + mao_obra + outros_custos) * quantidade, 2)
+        
+        # LUCRO BRUTO E LÍQUIDO (com arredondamento)
+        lucro_bruto = round(receita_bruta_venda - custo_total_compra - comissao_valor - custos_totais, 2)
+        
+        # IMPOSTO SOBRE O LUCRO (apenas se lucro positivo)
+        if lucro_bruto > 0:
+            imposto_valor = round(lucro_bruto * (imposto_percent / 100), 2)
+        else:
+            imposto_valor = 0.0
+            
+        lucro_liquido = round(lucro_bruto - imposto_valor, 2)
+        
+        # CÁLCULO DE MARGEM (com proteção contra divisão por zero)
+        if custo_total_compra > 0:
+            margem_bruta_percent = round((lucro_bruto / custo_total_compra) * 100, 2)
+            margem_liquida_percent = round((lucro_liquido / custo_total_compra) * 100, 2)
+            roi_percent = round((lucro_liquido / custo_total_compra) * 100, 2)
+        else:
+            margem_bruta_percent = 0.0
+            margem_liquida_percent = 0.0
+            roi_percent = 0.0
         
         # VALIDAÇÃO DE OPORTUNIDADE
         oportunidade_valida = lucro_liquido > 0
         
         # EXIBIÇÃO DE RESULTADOS
         if oportunidade_valida:
-            st.success(f"🎉 **OPORTUNIDADE ENCONTRADA!** Lucro garantido de R$ {lucro_liquido:.2f}")
+            st.success(f"🎉 **OPORTUNIDADE ENCONTRADA!** Lucro garantido de R$ {lucro_liquido:,.2f}")
         else:
-            st.error(f"🚫 **NÃO É VIÁVEL** - Prejuízo de R$ {abs(lucro_liquido):.2f}")
+            st.error(f"🚫 **NÃO É VIÁVEL** - Prejuízo de R$ {abs(lucro_liquido):,.2f}")
         
         st.markdown("---")
         
@@ -287,9 +316,9 @@ def calcular_arbitragem_produto(
         with col_res2:
             st.markdown(f"""
             **🛒 COMPRA EM:** {plataforma_compra}
-            **💰 PREÇO COMPRA:** R$ {preco_compra:.2f}/un
+            **💰 PREÇO COMPRA:** R$ {preco_compra:,.2f}/un
             **💵 VENDA EM:** {plataforma_venda}
-            **💰 PREÇO VENDA:** R$ {preco_venda:.2f}/un
+            **💰 PREÇO VENDA:** R$ {preco_venda:,.2f}/un
             """)
         
         st.markdown("---")
@@ -301,35 +330,36 @@ def calcular_arbitragem_produto(
         
         with col_fin1:
             st.markdown("#### **SAÍDAS (CUSTOS)**")
-            st.write(f"**Custo produtos:** R$ {preco_compra * quantidade:.2f}")
-            st.write(f"**Frete compra:** R$ {frete_compra:.2f}")
-            st.write(f"**Comissão ({comissao_percent}%):** R$ {comissao_valor:.2f}")
-            st.write(f"**Embalagem:** R$ {custo_embalagem * quantidade:.2f}")
-            st.write(f"**Anúncios:** R$ {custo_anuncio * quantidade:.2f}")
-            st.write(f"**Mão de obra:** R$ {mao_obra * quantidade:.2f}")
-            st.write(f"**Outros custos:** R$ {outros_custos * quantidade:.2f}")
-            st.write(f"**Impostos ({imposto_percent}%):** R$ {imposto_valor:.2f}")
-            st.markdown(f"**📍 TOTAL SAÍDAS:** R$ {custo_total_compra + comissao_valor + custos_totais + imposto_valor:.2f}")
+            st.write(f"**Custo produtos:** R$ {preco_compra * quantidade:,.2f}")
+            st.write(f"**Frete compra:** R$ {frete_compra:,.2f}")
+            st.write(f"**Comissão ({comissao_percent}%):** R$ {comissao_valor:,.2f}")
+            st.write(f"**Embalagem:** R$ {custo_embalagem * quantidade:,.2f}")
+            st.write(f"**Anúncios:** R$ {custo_anuncio * quantidade:,.2f}")
+            st.write(f"**Mão de obra:** R$ {mao_obra * quantidade:,.2f}")
+            st.write(f"**Outros custos:** R$ {outros_custos * quantidade:,.2f}")
+            st.write(f"**Impostos ({imposto_percent}%):** R$ {imposto_valor:,.2f}")
+            total_saidas = custo_total_compra + comissao_valor + custos_totais + imposto_valor
+            st.markdown(f"**📍 TOTAL SAÍDAS:** R$ {total_saidas:,.2f}")
         
         with col_fin2:
             st.markdown("#### **ENTRADAS (RECEITAS)**")
-            st.write(f"**Venda produtos:** R$ {preco_venda * quantidade:.2f}")
-            st.write(f"**Frete recebido:** R$ {frete_venda * quantidade:.2f}")
-            st.markdown(f"**📍 TOTAL ENTRADAS:** R$ {receita_bruta_venda:.2f}")
+            st.write(f"**Venda produtos:** R$ {preco_venda * quantidade:,.2f}")
+            st.write(f"**Frete recebido:** R$ {frete_venda * quantidade:,.2f}")
+            st.markdown(f"**📍 TOTAL ENTRADAS:** R$ {receita_bruta_venda:,.2f}")
         
         with col_fin3:
             st.markdown("#### **RESULTADO FINAL**")
             
             if oportunidade_valida:
-                st.success(f"**💰 LUCRO BRUTO:** R$ {lucro_bruto:.2f}")
-                st.success(f"**💵 LUCRO LÍQUIDO:** R$ {lucro_liquido:.2f}")
-                st.success(f"**📈 MARGEM BRUTA:** {margem_bruta_percent:.1f}%")
-                st.success(f"**📊 MARGEM LÍQUIDA:** {margem_liquida_percent:.1f}%")
-                st.success(f"**🚀 ROI:** {roi_percent:.1f}%")
+                st.success(f"**💰 LUCRO BRUTO:** R$ {lucro_bruto:,.2f}")
+                st.success(f"**💵 LUCRO LÍQUIDO:** R$ {lucro_liquido:,.2f}")
+                st.success(f"**📈 MARGEM BRUTA:** {margem_bruta_percent:,.2f}%")
+                st.success(f"**📊 MARGEM LÍQUIDA:** {margem_liquida_percent:,.2f}%")
+                st.success(f"**🚀 ROI:** {roi_percent:,.2f}%")
             else:
-                st.error(f"**📉 PREJUÍZO BRUTO:** R$ {abs(lucro_bruto):.2f}")
-                st.error(f"**📊 PREJUÍZO LÍQUIDO:** R$ {abs(lucro_liquido):.2f}")
-                st.error(f"**⚠️ NEGATIVO:** {margem_liquida_percent:.1f}%")
+                st.error(f"**📉 PREJUÍZO BRUTO:** R$ {abs(lucro_bruto):,.2f}")
+                st.error(f"**📊 PREJUÍZO LÍQUIDO:** R$ {abs(lucro_liquido):,.2f}")
+                st.error(f"**⚠️ MARGEM NEGATIVA:** {margem_liquida_percent:,.2f}%")
         
         st.markdown("---")
         
@@ -344,25 +374,25 @@ def calcular_arbitragem_produto(
                 **✅ PASSO 1 - COMPRAR:**
                 1. Acesse **{plataforma_compra}**
                 2. Busque por: **"{produto}"**
-                3. Compre por: **R$ {preco_compra:.2f}** cada
-                4. Total a pagar: **R$ {custo_total_compra:.2f}**
+                3. Compre por: **R$ {preco_compra:,.2f}** cada
+                4. Total a pagar: **R$ {custo_total_compra:,.2f}**
                 """)
             
             with col_passos2:
                 st.info(f"""
                 **✅ PASSO 2 - VENDER:**
                 1. Acesse **{plataforma_venda}**
-                2. Anuncie por: **R$ {preco_venda:.2f}** cada
-                3. Ofereça: {"Frete grátis" if frete_venda == 0 else f"Frete: R$ {frete_venda:.2f}"}
-                4. Receita esperada: **R$ {receita_bruta_venda:.2f}**
+                2. Anuncie por: **R$ {preco_venda:,.2f}** cada
+                3. Ofereça: {"Frete grátis" if frete_venda == 0 else f"Frete: R$ {frete_venda:,.2f}"}
+                4. Receita esperada: **R$ {receita_bruta_venda:,.2f}**
                 """)
             
             st.success(f"""
             **🎊 RESULTADO FINAL ESPERADO:**
-            Investindo **R$ {custo_total_compra:.2f}**, você terá um **lucro líquido de R$ {lucro_liquido:.2f}**
+            Investindo **R$ {custo_total_compra:,.2f}**, você terá um **lucro líquido de R$ {lucro_liquido:,.2f}**
             em aproximadamente **{quantidade * 2} dias úteis** (compra + venda).
             
-            **Retorno sobre investimento: {roi_percent:.1f}%**
+            **Retorno sobre investimento: {roi_percent:,.2f}%**
             """)
         else:
             st.warning("""
@@ -385,12 +415,20 @@ def calcular_arbitragem_produto(
         for variacao in variacoes:
             novo_preco_venda = preco_venda * (1 + variacao/100)
             nova_receita = (novo_preco_venda * quantidade) + (frete_venda * quantidade)
-            novo_lucro = nova_receita - custo_total_compra - comissao_valor - custos_totais - imposto_valor
+            novo_lucro = nova_receita - custo_total_compra - comissao_valor - custos_totais
+            
+            if novo_lucro > 0:
+                novo_imposto = novo_lucro * (imposto_percent / 100)
+            else:
+                novo_imposto = 0
+                
+            novo_lucro_liquido = novo_lucro - novo_imposto
+            
             dados_analise.append({
                 "Variação Preço Venda": f"{variacao:+}%",
-                "Novo Preço": f"R$ {novo_preco_venda:.2f}",
-                "Lucro Líquido": f"R$ {novo_lucro:.2f}",
-                "ROI": f"{(novo_lucro/custo_total_compra)*100:.1f}%" if custo_total_compra > 0 else "0%"
+                "Novo Preço": f"R$ {novo_preco_venda:,.2f}",
+                "Lucro Líquido": f"R$ {novo_lucro_liquido:,.2f}",
+                "ROI": f"{(novo_lucro_liquido/custo_total_compra)*100:,.1f}%" if custo_total_compra > 0 else "0%"
             })
         
         df_analise = pd.DataFrame(dados_analise)
