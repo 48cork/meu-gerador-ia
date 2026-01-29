@@ -1,0 +1,28 @@
+[2026-01-28T22:50:02.707Z] [INFO] Starting MCP installation...
+[2026-01-28T22:50:02.709Z] [INFO] Platform: win32
+[2026-01-28T22:50:02.709Z] [INFO] Selected MCPs: browser, context7, exa, desktop-commander
+[2026-01-28T22:50:02.711Z] [INFO] Installing Browser (Puppeteer)...
+[2026-01-28T22:50:02.711Z] [INFO] Installing Exa Web Search...
+[2026-01-28T22:50:02.711Z] [INFO] Installing Desktop Commander...
+[2026-01-28T22:50:02.711Z] [INFO] Installing Context7...
+[2026-01-28T22:50:02.713Z] [INFO] Validating package: @modelcontextprotocol/server-puppeteer
+[2026-01-28T22:50:02.713Z] [INFO] Validating package: @wonderwhy-er/desktop-commander
+[2026-01-28T22:50:02.713Z] [INFO] Validating package: exa-mcp-server
+[2026-01-28T22:50:02.714Z] [INFO] Validating package: @upstash/context7-mcp
+[2026-01-28T22:50:12.783Z] [INFO] Package @modelcontextprotocol/server-puppeteer validation skipped (Command failed: npx -y @modelcontextprotocol/server-puppeteer --version
+) - will be installed on first use
+[2026-01-28T22:50:12.784Z] [INFO] Package @wonderwhy-er/desktop-commander validation skipped (Command failed: npx -y @wonderwhy-er/desktop-commander --version
+) - will be installed on first use
+[2026-01-28T22:50:12.797Z] [SUCCESS] Browser (Puppeteer) installed successfully
+[2026-01-28T22:50:12.797Z] [INFO] Package exa-mcp-server validation skipped (Command failed: npx -y exa-mcp-server --version
+) - will be installed on first use
+[2026-01-28T22:50:12.797Z] [SUCCESS] Desktop Commander installed successfully
+[2026-01-28T22:50:12.803Z] [INFO] Package @upstash/context7-mcp validation skipped (Command failed: npx -y @upstash/context7-mcp --version
+) - will be installed on first use
+[2026-01-28T22:50:12.818Z] [ERROR] Exa Web Search installation failed: Failed to parse existing .mcp.json: Unexpected non-whitespace character after JSON at position 190 (line 15 column 1)
+[2026-01-28T22:50:12.819Z] [ERROR] Context7 installation failed: Failed to parse existing .mcp.json: Unexpected non-whitespace character after JSON at position 190 (line 15 column 1)
+[2026-01-28T22:50:12.821Z] [INFO] Health checks deferred to Story 1.8
+[2026-01-28T22:50:12.821Z] [INFO] MCP installation complete
+[2026-01-28T22:50:12.822Z] [INFO] Success: 2
+[2026-01-28T22:50:12.822Z] [INFO] Warnings: 0
+[2026-01-28T22:50:12.823Z] [INFO] Failed: 2
