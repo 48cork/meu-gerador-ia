@@ -1,1 +1,22 @@
-{"mcpServers":{"browser":{"command":"cmd","args":["/c","npx","-y","@modelcontextprotocol/server-puppeteer"]}}} 
+{
+  "mcpServers": {
+    "browser": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "desktop-commander": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@wonderwhy-er/desktop-commander"
+      ]
+    }
+  }
+}

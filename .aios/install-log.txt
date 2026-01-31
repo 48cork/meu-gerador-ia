@@ -26,3 +26,32 @@
 [2026-01-28T22:50:12.822Z] [INFO] Success: 2
 [2026-01-28T22:50:12.822Z] [INFO] Warnings: 0
 [2026-01-28T22:50:12.823Z] [INFO] Failed: 2
+[2026-01-31T08:39:14.854Z] [INFO] Starting MCP installation...
+[2026-01-31T08:39:14.856Z] [INFO] Platform: win32
+[2026-01-31T08:39:14.857Z] [INFO] Selected MCPs: browser, context7, exa, desktop-commander
+[2026-01-31T08:39:14.863Z] [INFO] Backed up existing .mcp.json
+[2026-01-31T08:39:14.870Z] [INFO] Installing Browser (Puppeteer)...
+[2026-01-31T08:39:14.870Z] [INFO] Installing Context7...
+[2026-01-31T08:39:14.870Z] [INFO] Installing Exa Web Search...
+[2026-01-31T08:39:14.870Z] [INFO] Installing Desktop Commander...
+[2026-01-31T08:39:14.873Z] [INFO] Validating package: @modelcontextprotocol/server-puppeteer
+[2026-01-31T08:39:14.874Z] [INFO] Validating package: @upstash/context7-mcp
+[2026-01-31T08:39:14.875Z] [INFO] Validating package: @wonderwhy-er/desktop-commander
+[2026-01-31T08:39:14.875Z] [INFO] Validating package: exa-mcp-server
+[2026-01-31T08:39:24.999Z] [INFO] Package exa-mcp-server validation skipped (Command failed: npx -y exa-mcp-server --version
+) - will be installed on first use
+[2026-01-31T08:39:25.001Z] [INFO] Package @modelcontextprotocol/server-puppeteer validation skipped (Command failed: npx -y @modelcontextprotocol/server-puppeteer --version
+) - will be installed on first use
+[2026-01-31T08:39:25.002Z] [INFO] Package @wonderwhy-er/desktop-commander validation skipped (Command failed: npx -y @wonderwhy-er/desktop-commander --version
+) - will be installed on first use
+[2026-01-31T08:39:25.033Z] [INFO] Package @upstash/context7-mcp validation skipped (Command failed: npx -y @upstash/context7-mcp --version
+) - will be installed on first use
+[2026-01-31T08:39:25.041Z] [SUCCESS] Browser (Puppeteer) installed successfully
+[2026-01-31T08:39:25.041Z] [SUCCESS] Exa Web Search installed successfully
+[2026-01-31T08:39:25.041Z] [SUCCESS] Context7 installed successfully
+[2026-01-31T08:39:25.042Z] [SUCCESS] Desktop Commander installed successfully
+[2026-01-31T08:39:25.043Z] [INFO] Health checks deferred to Story 1.8
+[2026-01-31T08:39:25.043Z] [INFO] MCP installation complete
+[2026-01-31T08:39:25.044Z] [INFO] Success: 4
+[2026-01-31T08:39:25.045Z] [INFO] Warnings: 0
+[2026-01-31T08:39:25.046Z] [INFO] Failed: 0
