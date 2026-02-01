@@ -182,35 +182,41 @@ def render_aba(contexto, label_tab):
                 cols = st.columns(3)
                 for i, prod in enumerate(trends):
                     with cols[i]:
-                        with st.spinner(f"Analisando {prod}..."):
-                            val, msg = buscar_dados_web(prod, contexto)
-                            
-                            # Score Calculation (Simulated ROI check)
-                            score_color = "red"
-                            score_text = "Baixo"
-                            if val > 0:
-                                # Estimate simple ROI: (Commision - Cost) / Cost
-                                # Cost assumed ~100 BRL (Ads) for calculation
-                                est_comm = val * 0.60
-                                est_roi = ((est_comm - 100) / 100) * 100 if est_comm > 100 else 0
+                        with st.container(border=True): # Card Style
+                            st.markdown(f"### {prod}")
+                            with st.spinner(f"Analisando..."):
+                                val, msg = buscar_dados_web(prod, contexto)
                                 
-                                if est_roi > 50: 
-                                    score_color = "green" 
-                                    score_text = "ALTO"
-                                elif est_roi > 20: 
-                                    score_color = "orange"
-                                    score_text = "MÉDIO"
-                            
-                            st.markdown(f"**{prod}**")
-                            if val > 0:
-                                st.metric("Comissão Est.", f"R$ {val*0.60:.2f}")
-                                st.markdown(f"Viabilidade: :{score_color}[{score_text}]")
-                                if st.button(f"Carregar", key=f"load_{prod}_{contexto}"):
-                                    st.session_state[k_nome] = prod
-                                    st.session_state[k_venda] = val * 0.60
-                                    st.rerun()
-                            else:
-                                st.warning("Dados indisponíveis")
+                                # Score Calculation (Simulated ROI check)
+                                score_color = "red"
+                                score_text = "BAIXO"
+                                est_comm = 0.0
+                                
+                                if val > 0:
+                                    # Estimate simple ROI: (Commision - Cost) / Cost
+                                    # Cost assumed ~100 BRL (Ads) for calculation
+                                    est_comm = val * 0.60
+                                    est_cost = 100.0 # Custo fixo estimado de tráfego
+                                    est_roi = ((est_comm - est_cost) / est_cost) * 100 if est_comm > est_cost else 0
+                                    
+                                    if est_roi > 50: 
+                                        score_color = "green" 
+                                        score_text = "ALTO"
+                                    elif est_roi >= 20: 
+                                        score_color = "orange"
+                                        score_text = "MÉDIO"
+                                
+                                if val > 0:
+                                    st.metric("Comissão Est.", f"R$ {est_comm:.2f}")
+                                    st.markdown(f"**Viabilidade:** :{score_color}[{score_text}]")
+                                    st.progress(min(int(est_roi), 100) if est_roi > 0 else 0)
+                                    
+                                    if st.button(f"🚀 Carregar Dados", key=f"load_{prod}_{contexto}", use_container_width=True):
+                                        st.session_state[k_nome] = prod
+                                        st.session_state[k_venda] = est_comm
+                                        st.rerun()
+                                else:
+                                    st.warning(f"Dados indisponíveis no momento.")
 
     if st.button("💾 Salvar Análise", key=f"save_{contexto}"):
         salvar_no_historico({
