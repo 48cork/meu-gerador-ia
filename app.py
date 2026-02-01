@@ -12,10 +12,25 @@ st.set_page_config(page_title="Agente Arbitragem Pro", page_icon="🤖", layout=
 # CSS PERSONALIZADO
 st.markdown("""
 <style>
-    .main-header {text-align: center; color: #4CAF50; font-size: 3em; font-weight: bold; padding: 1em 0;}
+    .main-header {text-align: left; color: #4CAF50; font-size: 3em; font-weight: bold; padding: 1em 0;}
     .sub-header {text-align: center; color: #555; font-size: 1.5em; margin-bottom: 1em;}
     .stButton>button {width: 100%; border-radius: 5px; height: 3em;}
     .metric-card {background-color: #f8f9fa; padding: 1em; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+    
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        color: #555;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+        border-top: 1px solid #ddd;
+        z-index: 100;
+    }
+    .content-spacer { height: 50px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,7 +92,7 @@ def buscar_dados_web(termo, contexto):
         for p in precos:
             try:
                 # Limpeza simples
-                p_clean = p.replace(',', '.') if context != 'brasil' else p.replace('.', '').replace(',', '.')
+                p_clean = p.replace(',', '.') if contexto != 'brasil' else p.replace('.', '').replace(',', '.')
                 val = float(p_clean)
                 if 5 < val < 5000: valores.append(val)
             except: pass
@@ -162,8 +177,34 @@ def render_aba(contexto, label_tab):
         st.balloons()
 
 def main():
-    st.markdown("<h1 class='main-header'>🚀 Agente Multi-Plataforma</h1>", unsafe_allow_html=True)
+    # --- UI: HEADER & LOGO ---
+    col_logo, col_title = st.columns([1, 4])
+    with col_logo:
+        try:
+            if os.path.exists("logo.png"):
+                st.image("logo.png", width=120)
+            else:
+                st.markdown("# 🚀")
+        except:
+             st.markdown("# 🚀")
+
+    with col_title:
+        st.markdown("<h1 class='main-header' style='text-align: left;'>Agente Arbitragem Pro</h1>", unsafe_allow_html=True)
     
+    # --- UI: SIDEBAR ---
+    with st.sidebar:
+        try:
+            if os.path.exists("logo.png"):
+                st.image("logo.png", use_column_width=True)
+        except: pass
+        
+        st.header("🆘 Central de Ajuda")
+        st.markdown("Precisa de suporte ou tem dúvidas sobre a ferramenta?")
+        st.link_button("💬 Falar com Suporte (WhatsApp)", "https://wa.me/5599999999999") 
+        st.divider()
+        st.info("💡 **Dica:** Use as abas para alternar entre mercados.")
+
+    # --- TABS ---
     tabs = st.tabs(["🇧🇷 Brasil (Marketplaces)", "🇺🇸 ClickBank (Dólar)", "🇪🇺 Digistore24 (Euro)", "📚 Histórico"])
     
     with tabs[0]:
@@ -179,6 +220,14 @@ def main():
             st.dataframe(df, use_container_width=True)
         else:
             st.warning("Nenhum dado salvo.")
+            
+    # --- UI: FOOTER ---
+    st.markdown("""
+    <div class='content-spacer'></div>
+    <div class='footer'>
+        <p>© 2026 Arbitrage Pro - Desenvolvido por Sérgio | Todos os direitos reservados.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
