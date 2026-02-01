@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
+import requests
+from bs4 import BeautifulSoup
+import re
 
 # CONFIGURAÇÃO DO AGENTE
 st.set_page_config(page_title="Agente Arbitragem Pro", page_icon="🤖", layout="wide")
@@ -20,27 +23,73 @@ def analisar_viabilidade(roi, margem):
     else:
         return "⚠️ ALTO RISCO", "Cuidado! Margem muito apertada para imprevistos ou Ads alto."
 
+def buscar_preco_online(termo):
+    """Busca simples de preço médio (simulação com scraping básico)"""
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    try:
+        # Busca no Google Shopping (HTML simples)
+        url = f"https://www.google.com/search?q={termo}+preço&tbm=shop"
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Tenta encontrar padrões de preço (R$ xx,xx)
+        text = soup.get_text()
+        precos = re.findall(r'R\$\s*([\d\.]+,\d{2})', text)
+        
+        if precos:
+            # Converte o primeiro preço encontrado para float
+            preco_str = precos[0].replace('.', '').replace(',', '.')
+            return float(preco_str)
+    except Exception as e:
+        st.error(f"Erro na busca: {e}")
+    return 0.0
+
 def main():
-    st.title("🤖 AGENTE DE ANÁLISE: ARBITRAGEM PRO")
+    # Inicialização de Estado da Sessão
+    if 'p_compra' not in st.session_state: st.session_state.p_compra = 100.0
+    if 'p_venda' not in st.session_state: st.session_state.p_venda = 200.0
+    if 'nome_produto' not in st.session_state: st.session_state.nome_produto = "Scanner de Oportunidade"
+
+    # Callbacks
+    def atualizar_precos():
+        termo = st.session_state.nome_produto
+        if termo:
+            with st.spinner(f"Buscando preços para '{termo}'..."):
+                preco_encontrado = buscar_preco_online(termo)
+                if preco_encontrado > 0:
+                    st.session_state.p_compra = preco_encontrado
+                    st.session_state.p_venda = preco_encontrado * 2.0  # Sugestão de markup 100%
+                    st.toast(f"Preço encontrado: R$ {preco_encontrado:.2f}", icon="✅")
+                else:
+                    st.toast("Não foi possível identificar um preço claro.", icon="⚠️")
+
+    st.markdown("<h1 style='text-align: center;'>🤖 AGENTE DE ANÁLISE: ARBITRAGEM PRO</h1>", unsafe_allow_html=True)
     
     tab_task, tab_dash = st.tabs(["🎯 Missão: Analisar Produto", "📈 Workflow de Histórico"])
 
     with tab_task:
         # ENTRADA DE DADOS
         with st.expander("📦 Dados do Produto", expanded=True):
+            col_search, col_btn = st.columns([3, 1])
+            nome = col_search.text_input("Nome da Missão / Produto", key="nome_produto")
+            col_btn.write("") # Espaçamento
+            col_btn.write("") 
+            if col_btn.button("🔍 Pesquisar Preço", use_container_width=True):
+                 atualizar_precos()
+
             col1, col2 = st.columns([3, 1])
-            nome = col1.text_input("Nome da Missão / Produto", value="Scanner de Oportunidade")
+            # nome já capturado acima, apenas logicamente mantendo estrutura se necessario, mas simplifiquei
             qtd = col2.number_input("Qtd", min_value=1, value=1)
 
         c1, c2 = st.columns(2)
         with c1:
-            st.subheader("💰 Estrutura de Custos")
-            p_compra = st.number_input("Preço Compra Un. (R$)", value=100.0)
+            st.markdown("<h3 style='text-align: center;'>💰 Estrutura de Custos</h3>", unsafe_allow_html=True)
+            p_compra = st.number_input("Preço Compra Un. (R$)", key="p_compra")
             frete_entrada = st.number_input("Frete Entrada (Total R$)", value=0.0)
         
         with c2:
-            st.subheader("📊 Parâmetros de Venda")
-            p_venda = st.number_input("Preço Venda Un. (R$)", value=200.0)
+            st.markdown("<h3 style='text-align: center;'>📊 Parâmetros de Venda</h3>", unsafe_allow_html=True)
+            p_venda = st.number_input("Preço Venda Un. (R$)", key="p_venda")
             taxa_plataforma = st.number_input("Taxa Plataforma (%)", value=12.0)
             ads_percent = st.number_input("Publicidade/Ads (%)", value=5.0)
 
