@@ -198,7 +198,7 @@ def main():
         
         st.header("🆘 Suporte e Dúvidas")
         st.markdown("Precisa de ajuda para lucrar em Dólar ou Euro?")
-        st.link_button("💬 Falar com Suporte (WhatsApp)", "https://wa.me/5583991183123?text=Olá%20Sérgio!%20Vi%20sua%20Calculadora%20de%20Arbitragem%20e%20quero%20saber%20mais") 
+        st.link_button("💬 Falar com Suporte (WhatsApp)", "https://wa.me/5583991183123?text=Olá%20Sérgio!%20Vi%20sua%20Calculadora%20de%20Arbitragem%20e%20quero%20saber%20mais.") 
         st.divider()
         st.info("💡 **Dica:** Use as abas para alternar entre mercados.")
 
