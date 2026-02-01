@@ -166,6 +166,52 @@ def render_aba(contexto, label_tab):
     veredito, descricao = analisar_viabilidade(roi, margem)
     st.success(f"{veredito} - {descricao}")
     
+    
+    # --- INTELLIGENCE MODULE: TRENDING PRODUCTS ---
+    if contexto != 'brasil':
+        with st.expander("🔥 Top Trending Products (Live Search)", expanded=False):
+            st.caption("Intelligence Module: Rastreando produtos de alta gravidade em tempo real.")
+            
+            if st.button(f"Rastrear Tendências Agora ({label_tab})", key=f"btn_trend_{contexto}"):
+                trends = []
+                if contexto == 'clickbank':
+                    trends = ["Alpilean", "Live Pure", "ProDentim"]
+                elif contexto == 'digistore':
+                    trends = ["Metabo Flex", "Tube Mastery", "Keto Meal Plan"]
+                
+                cols = st.columns(3)
+                for i, prod in enumerate(trends):
+                    with cols[i]:
+                        with st.spinner(f"Analisando {prod}..."):
+                            val, msg = buscar_dados_web(prod, contexto)
+                            
+                            # Score Calculation (Simulated ROI check)
+                            score_color = "red"
+                            score_text = "Baixo"
+                            if val > 0:
+                                # Estimate simple ROI: (Commision - Cost) / Cost
+                                # Cost assumed ~100 BRL (Ads) for calculation
+                                est_comm = val * 0.60
+                                est_roi = ((est_comm - 100) / 100) * 100 if est_comm > 100 else 0
+                                
+                                if est_roi > 50: 
+                                    score_color = "green" 
+                                    score_text = "ALTO"
+                                elif est_roi > 20: 
+                                    score_color = "orange"
+                                    score_text = "MÉDIO"
+                            
+                            st.markdown(f"**{prod}**")
+                            if val > 0:
+                                st.metric("Comissão Est.", f"R$ {val*0.60:.2f}")
+                                st.markdown(f"Viabilidade: :{score_color}[{score_text}]")
+                                if st.button(f"Carregar", key=f"load_{prod}_{contexto}"):
+                                    st.session_state[k_nome] = prod
+                                    st.session_state[k_venda] = val * 0.60
+                                    st.rerun()
+                            else:
+                                st.warning("Dados indisponíveis")
+
     if st.button("💾 Salvar Análise", key=f"save_{contexto}"):
         salvar_no_historico({
             "Data": datetime.now().strftime("%Y-%m-%d"),
