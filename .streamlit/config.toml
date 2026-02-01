@@ -1,0 +1,15 @@
+[theme]
+# Design Tokens - Tailwind/Shadcn Dark Mode
+# Cores Base
+primaryColor = "#22C55E"              # success.base (Verde moderno)
+backgroundColor = "#0A0A0A"           # background.base (Dark profundo)
+secondaryBackgroundColor = "#1A1A1A"  # surface.base (Cards/Superfícies)
+textColor = "#FAFAFA"                 # text.primary (Texto principal suave)
+font = "sans serif"
+
+# Configurações adicionais
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

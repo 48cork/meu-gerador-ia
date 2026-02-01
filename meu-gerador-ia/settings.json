@@ -1,0 +1,11 @@
+{
+    "agent_id": "analista-lendario-sergio",
+    "permissions": {
+      "allow": [
+        "calculate(finance_metrics)",
+        "read(agents/analista_financeiro.py)",
+        "write(historico.csv)"
+      ],
+      "model": "Claude-3-5-Sonnet"
+    }
+  }

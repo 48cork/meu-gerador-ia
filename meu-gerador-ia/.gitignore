@@ -16,6 +16,12 @@ dist/
 build/
 *.log
 logs/
+.aios/logs/*.log
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
 # IDE & OS (AIOS)
 .DS_Store
@@ -27,3 +33,19 @@ Thumbs.db
 .aios-core/local/
 .claude/settings.local.json
 .aios/install-log.txt
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Test files (opcional - descomente se não quiser commitá-los)
+# test_agent.py
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+*.code-workspace

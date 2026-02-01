@@ -16,6 +16,9 @@ __pycache__/
 # Dependencies (AIOS)
 node_modules/
 node_modules
+package.json
+package-lock.json
+yarn.lock
 
 # Build & Logs (AIOS)
 dist/

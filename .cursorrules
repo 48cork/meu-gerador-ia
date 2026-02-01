@@ -1,0 +1,10 @@
+{
+  "project_context": "Calculadora de Arbitragem Profissional",
+  "rules": [
+    "Priorize precisão matemática e didática visual.",
+    "Mantenha a interface Streamlit em modo 'wide' e fontes legíveis.",
+    "Explique alterações de código de forma peer-to-peer (simples e direta).",
+    "Permissão total para manipular arquivos CSV de histórico.",
+    "Use bibliotecas gratuitas (Streamlit, Pandas)."
+  ]
+}
