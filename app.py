@@ -167,6 +167,24 @@ def render_aba(contexto, label_tab):
     st.success(f"{veredito} - {descricao}")
     
     
+    
+    # --- MODULE: PROFIT PLANNING (CLICKBANK ONLY) ---
+    if contexto == 'clickbank':
+        with st.expander("📊 Planejamento de Lucro", expanded=True):
+            pc1, pc2 = st.columns(2)
+            meta_inv = pc1.number_input("Investimento em Tráfego (R$)", value=1000.0, step=100.0, key=f"plan_inv_{contexto}")
+            meta_lucro = pc2.number_input("Meta de Lucro Mensal (R$)", value=5000.0, step=500.0, key=f"plan_meta_{contexto}")
+            
+            # Smart Feedback
+            comissao_atual = st.session_state.get(k_venda, 0.0)
+            nome_atual = st.session_state.get(k_nome, "Produto")
+            
+            if comissao_atual > 0:
+                vendas_necessarias = (meta_lucro + meta_inv) / comissao_atual
+                st.info(f"💡 Com base na sua meta de **R$ {meta_lucro:,.2f}**, você precisaria de aproximadamente **{int(vendas_necessarias)+1} vendas** do produto **{nome_atual}** (Comissão: R$ {comissao_atual:.2f}).")
+            else:
+                st.warning("⚠️ Selecione um produto no **Radar de Tendências** abaixo para calcular sua meta.")
+
     # --- INTELLIGENCE MODULE: TRENDING PRODUCTS ---
     if contexto != 'brasil':
         with st.expander("🔥 Top Trending Products (Live Search)", expanded=False):
