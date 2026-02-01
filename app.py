@@ -12,7 +12,7 @@ st.set_page_config(page_title="Agente Arbitragem Pro", page_icon="🤖", layout=
 # CSS PERSONALIZADO
 st.markdown("""
 <style>
-    .main-header {text-align: left; color: #4CAF50; font-size: 3em; font-weight: bold; padding: 1em 0;}
+    .main-header {text-align: center; color: #4CAF50; font-size: 3em; font-weight: bold; padding: 1em 0;}
     .sub-header {text-align: center; color: #555; font-size: 1.5em; margin-bottom: 1em;}
     .stButton>button {width: 100%; border-radius: 5px; height: 3em;}
     .metric-card {background-color: #f8f9fa; padding: 1em; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
@@ -178,18 +178,16 @@ def render_aba(contexto, label_tab):
 
 def main():
     # --- UI: HEADER & LOGO ---
-    col_logo, col_title = st.columns([1, 4])
-    with col_logo:
+    col_centered = st.columns([1, 8, 1])
+    with col_centered[1]:
         try:
             if os.path.exists("logo.png"):
-                st.image("logo.png", width=120)
+                st.image("logo.png", width=100) # Centrado (via column trick or clean CSS, Streamlit handles images as block)
             else:
-                st.markdown("# 🚀")
-        except:
-             st.markdown("# 🚀")
-
-    with col_title:
-        st.markdown("<h1 class='main-header' style='text-align: left;'>Agente Arbitragem Pro</h1>", unsafe_allow_html=True)
+                st.markdown("<h1 style='text-align: center;'>🚀</h1>", unsafe_allow_html=True)
+        except: pass
+        
+        st.markdown("<h1 class='main-header' style='text-align: center;'>Agente Arbitragem Pro</h1>", unsafe_allow_html=True)
     
     # --- UI: SIDEBAR ---
     with st.sidebar:
@@ -198,7 +196,7 @@ def main():
                 st.image("logo.png", use_column_width=True)
         except: pass
         
-        st.header("🆘 Central de Ajuda")
+        st.header("🆘 Suporte e Dúvidas")
         st.markdown("Precisa de suporte ou tem dúvidas sobre a ferramenta?")
         st.link_button("💬 Falar com Suporte (WhatsApp)", "https://wa.me/5599999999999") 
         st.divider()
