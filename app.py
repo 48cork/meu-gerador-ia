@@ -107,14 +107,20 @@ def buscar_dados_web(termo, contexto):
     
     return 0.0, "Preço não encontrado."
 
-def render_aba(contexto, label_tab):
     st.markdown(f"<div class='sub-header'>{label_tab}</div>", unsafe_allow_html=True)
     
+    # Live Currency Display
+    taxa_cambio = 5.0 # default
+    if context != 'brasil':
+        moeda = "USD" if context == 'clickbank' else "EUR"
+        taxa_cambio = obter_cotacao(moeda)
+        st.caption(f"ℹ️ Câmbio atualizado: 1 {moeda} = R$ {taxa_cambio:.2f}")
+
     # Session State
-    k_nome = f"{contexto}_nome"
-    k_compra = f"{contexto}_compra"
-    k_venda = f"{contexto}_venda"
-    k_qtd = f"{contexto}_qtd"
+    k_nome = f"{context}_nome"
+    k_compra = f"{context}_compra"
+    k_venda = f"{context}_venda"
+    k_qtd = f"{context}_qtd"
     
     if k_compra not in st.session_state: st.session_state[k_compra] = 100.0
     if k_venda not in st.session_state: st.session_state[k_venda] = 200.0
@@ -124,13 +130,13 @@ def render_aba(contexto, label_tab):
     nome = col1.text_input("Produto / Oferta", key=k_nome)
     qtd = col2.number_input("Qtd Volume", min_value=1, value=1, key=k_qtd)
     
-    if st.button(f"🔍 Pesquisar Dados ({label_tab})", key=f"btn_{contexto}"):
+    if st.button(f"🔍 Pesquisar Dados ({label_tab})", key=f"btn_{context}"):
         if nome:
             with st.spinner("Varrendo a web..."):
-                valor, msg = buscar_dados_web(nome, contexto)
+                valor, msg = buscar_dados_web(nome, context)
                 if valor > 0:
                     st.session_state[k_venda] = valor # Assume que o valor encontrado é o preço de venda/mercado
-                    if contexto != 'brasil':
+                    if context != 'brasil':
                         st.session_state[k_venda] = valor * 0.60 # Estima 60% comissão para afiliados
                     st.toast(f"Atualizado: {msg}", icon="✅")
                 else:
@@ -140,12 +146,12 @@ def render_aba(contexto, label_tab):
     with c1:
         st.info("📉 Seus Custos")
         p_compra = st.number_input("Custo Unitário / CPA (R$)", key=k_compra)
-        frete = st.number_input("Outros Custos / Ads (R$)", value=0.0, key=f"{contexto}_frete")
+        frete = st.number_input("Outros Custos / Ads (R$)", value=0.0, key=f"{context}_frete")
         
     with c2:
         st.info("📈 Sua Receita")
         p_venda = st.number_input("Venda Unitária / Comissão (R$)", key=k_venda)
-        taxa = st.number_input("Taxas (%)", value=10.0, key=f"{contexto}_taxa")
+        taxa = st.number_input("Taxas (%)", value=10.0, key=f"{context}_taxa")
         
     # Engine de Cálculo
     total_receita = p_venda * qtd
@@ -166,14 +172,13 @@ def render_aba(contexto, label_tab):
     veredito, descricao = analisar_viabilidade(roi, margem)
     st.success(f"{veredito} - {descricao}")
     
-    
-    
+
     # --- MODULE: PROFIT PLANNING (CLICKBANK ONLY) ---
-    if contexto == 'clickbank':
+    if context == 'clickbank':
         with st.expander("📊 Planejamento de Lucro", expanded=True):
             pc1, pc2 = st.columns(2)
-            meta_inv = pc1.number_input("Investimento em Tráfego (R$)", value=1000.0, step=100.0, key=f"plan_inv_{contexto}")
-            meta_lucro = pc2.number_input("Meta de Lucro Mensal (R$)", value=5000.0, step=500.0, key=f"plan_meta_{contexto}")
+            meta_inv = pc1.number_input("Investimento em Tráfego (R$)", value=1000.0, step=100.0, key=f"plan_inv_{context}")
+            meta_lucro = pc2.number_input("Meta de Lucro Mensal (R$)", value=5000.0, step=500.0, key=f"plan_meta_{context}")
             
             # Smart Feedback
             comissao_atual = st.session_state.get(k_venda, 0.0)
@@ -186,55 +191,73 @@ def render_aba(contexto, label_tab):
                 st.warning("⚠️ Selecione um produto no **Radar de Tendências** abaixo para calcular sua meta.")
 
     # --- INTELLIGENCE MODULE: TRENDING PRODUCTS ---
-    if contexto != 'brasil':
+    if context != 'brasil':
         with st.expander("🔥 Top Trending Products (Live Search)", expanded=False):
             st.caption("Intelligence Module: Rastreando produtos de alta gravidade em tempo real.")
             
-            if st.button(f"Rastrear Tendências Agora ({label_tab})", key=f"btn_trend_{contexto}"):
+            if st.button(f"Rastrear Tendências Agora ({label_tab})", key=f"btn_trend_{context}"):
                 trends = []
-                if contexto == 'clickbank':
+                if context == 'clickbank':
                     trends = ["Alpilean", "Live Pure", "ProDentim"]
-                elif contexto == 'digistore':
+                elif context == 'digistore':
                     trends = ["Metabo Flex", "Tube Mastery", "Keto Meal Plan"]
                 
+                # Fetch Data First
+                results = []
+                with st.spinner("Analisando mercado em tempo real..."):
+                    for prod in trends:
+                        val, msg = buscar_dados_web(prod, context)
+                        est_comm = 0.0
+                        est_roi = 0.0
+                        
+                        if val > 0:
+                            est_comm = val * 0.60
+                            est_cost = 100.0
+                            est_roi = ((est_comm - est_cost) / est_cost) * 100 if est_comm > est_cost else 0
+                        
+                        results.append({
+                            "name": prod,
+                            "val": val,
+                            "est_comm": est_comm,
+                            "est_roi": est_roi
+                        })
+                
+                # Identify Best Choice
+                max_roi = max([r['est_roi'] for r in results]) if results else 0
+                
+                # Render Cards
                 cols = st.columns(3)
-                for i, prod in enumerate(trends):
+                for i, res in enumerate(results):
                     with cols[i]:
-                        with st.container(border=True): # Card Style
-                            st.markdown(f"### {prod}")
-                            with st.spinner(f"Analisando..."):
-                                val, msg = buscar_dados_web(prod, contexto)
-                                
-                                # Score Calculation (Simulated ROI check)
+                        with st.container(border=True):
+                            # Best Choice Badge
+                            if res['est_roi'] == max_roi and max_roi > 20:
+                                st.markdown("### 🏆 Best Choice")
+                                st.markdown(f"**{res['name']}**")
+                            else:
+                                st.markdown(f"### {res['name']}")
+                            
+                            # Content
+                            if res['val'] > 0:
                                 score_color = "red"
                                 score_text = "BAIXO"
-                                est_comm = 0.0
-                                
-                                if val > 0:
-                                    # Estimate simple ROI: (Commision - Cost) / Cost
-                                    # Cost assumed ~100 BRL (Ads) for calculation
-                                    est_comm = val * 0.60
-                                    est_cost = 100.0 # Custo fixo estimado de tráfego
-                                    est_roi = ((est_comm - est_cost) / est_cost) * 100 if est_comm > est_cost else 0
+                                if res['est_roi'] > 50: 
+                                    score_color = "green" 
+                                    score_text = "ALTO"
+                                elif res['est_roi'] >= 20: 
+                                    score_color = "orange"
+                                    score_text = "MÉDIO"
                                     
-                                    if est_roi > 50: 
-                                        score_color = "green" 
-                                        score_text = "ALTO"
-                                    elif est_roi >= 20: 
-                                        score_color = "orange"
-                                        score_text = "MÉDIO"
+                                st.metric("Comissão Est.", f"R$ {res['est_comm']:.2f}")
+                                st.markdown(f"**Viabilidade:** :{score_color}[{score_text}]")
+                                st.progress(min(int(res['est_roi']), 100) if res['est_roi'] > 0 else 0)
                                 
-                                if val > 0:
-                                    st.metric("Comissão Est.", f"R$ {est_comm:.2f}")
-                                    st.markdown(f"**Viabilidade:** :{score_color}[{score_text}]")
-                                    st.progress(min(int(est_roi), 100) if est_roi > 0 else 0)
-                                    
-                                    if st.button(f"🚀 Carregar Dados", key=f"load_{prod}_{contexto}", use_container_width=True):
-                                        st.session_state[k_nome] = prod
-                                        st.session_state[k_venda] = est_comm
-                                        st.rerun()
-                                else:
-                                    st.warning(f"Dados indisponíveis no momento.")
+                                if st.button(f"🚀 Carregar", key=f"load_{res['name']}_{context}", use_container_width=True):
+                                    st.session_state[k_nome] = res['name']
+                                    st.session_state[k_venda] = res['est_comm']
+                                    st.rerun()
+                            else:
+                                st.warning("Dados indisponíveis")
 
     if st.button("💾 Salvar Análise", key=f"save_{contexto}"):
         salvar_no_historico({
