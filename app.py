@@ -20,48 +20,94 @@ def analisar_viabilidade(roi, margem):
         return "💎 OPERAÇÃO OURO", "Excelente! Margem e ROI acima da média do mercado."
     elif roi >= 20 and margem >= 10:
         return "✅ VIÁVEL", "Operação saudável. Pode prosseguir com cautela."
-    else:
-        return "⚠️ ALTO RISCO", "Cuidado! Margem muito apertada para imprevistos ou Ads alto."
-
-def buscar_preco_online(termo):
-    """Busca simples de preço médio (simulação com scraping básico)"""
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+def obter_cotacao_dolar():
     try:
-        # Busca no Google Shopping (HTML simples)
-        url = f"https://www.google.com/search?q={termo}+preço&tbm=shop"
+        response = requests.get("https://economia.awesomeapi.com.br/last/USD-BRL")
+        dados = response.json()
+        return float(dados['USDBRL']['bid'])
+    except:
+        return 5.0 # Fallback conservador
+
+def buscar_dados_afiliado(termo):
+    """
+    Busca dados de produtos ClickBank/Digistore24 e converte para BRL
+    Retorna: (preco_brl, comissao_estimada_brl)
+    """
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    dolar = obter_cotacao_dolar()
+    
+    # Termos de busca focados em plataformas de afiliados
+    queries = [
+        f'site:clickbank.com "{termo}" price',
+        f'site:digistore24.com "{termo}" price',
+        f'"{termo}" affiliate commission rate',
+        f'"{termo}" review price'
+    ]
+    
+    preco_encontrado_usd = 0.0
+    
+    try:
+        # Tenta a primeira query principal
+        url = f"https://www.google.com/search?q={queries[0]}"
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Tenta encontrar padrões de preço (R$ xx,xx)
         text = soup.get_text()
-        precos = re.findall(r'R\$\s*([\d\.]+,\d{2})', text)
         
-        if precos:
-            # Converte o primeiro preço encontrado para float
-            preco_str = precos[0].replace('.', '').replace(',', '.')
-            return float(preco_str)
+        # Regex para preços em USD ($ XX.XX)
+        precos_usd = re.findall(r'\$\s?(\d+\.?\d{2})', text)
+        
+        if precos_usd:
+            # Pega o maior valor encontrado que seja "razoável" (evita $0.00 ou anos)
+            # Filtra valores < 1000 (evita anos 2023, 2024) e > 5
+            valores = []
+            for p in precos_usd:
+                try:
+                    v = float(p)
+                    if 5 < v < 1000: valores.append(v)
+                except: pass
+            
+            if valores:
+                preco_encontrado_usd = max(valores) # Assume o maior preço como o "pacote completo"
+                
     except Exception as e:
         st.error(f"Erro na busca: {e}")
+
+    # Conversão e Estimativa
+    if preco_encontrado_usd > 0:
+        preco_brl = preco_encontrado_usd * dolar
+        return preco_brl
+    
     return 0.0
 
 def main():
     # Inicialização de Estado da Sessão
-    if 'p_compra' not in st.session_state: st.session_state.p_compra = 100.0
+    if 'p_compra' not in st.session_state: st.session_state.p_compra = 0.0 # Custo zero para afiliado
     if 'p_venda' not in st.session_state: st.session_state.p_venda = 200.0
-    if 'nome_produto' not in st.session_state: st.session_state.nome_produto = "Scanner de Oportunidade"
+    if 'nome_produto' not in st.session_state: st.session_state.nome_produto = "Alpilean"
 
     # Callbacks
-    def atualizar_precos():
+    def atualizar_dados_afiliado():
         termo = st.session_state.nome_produto
         if termo:
-            with st.spinner(f"Buscando preços para '{termo}'..."):
-                preco_encontrado = buscar_preco_online(termo)
-                if preco_encontrado > 0:
-                    st.session_state.p_compra = preco_encontrado
-                    st.session_state.p_venda = preco_encontrado * 2.0  # Sugestão de markup 100%
-                    st.toast(f"Preço encontrado: R$ {preco_encontrado:.2f}", icon="✅")
+            with st.spinner(f"Buscando dados de afiliado para '{termo}' em ClickBank/Digistore..."):
+                preco_brl = buscar_dados_afiliado(termo)
+                
+                if preco_brl > 0:
+                    # Lógica de Afiliado:
+                    # Preço de Venda = Valor que o cliente paga (Ticket)
+                    # Preço de Compra (Custo) = 0 (Produto Digital)
+                    # Mas para "simular" o ganho, vamos ajustar:
+                    # p_venda -> Comissão (vamos estimar 65% do ticket, média do mercado)
+                    
+                    comissao_estimada = preco_brl * 0.65
+                    
+                    st.session_state.p_venda = comissao_estimada # Receita esperada
+                    st.session_state.p_compra = 0.0 # Custo produto digital é zero (apenas ads)
+                    
+                    st.toast(f"Produto Encontrado! Valor Estimado (BRL): R$ {preco_brl:.2f}", icon="🇺🇸")
+                    st.info(f"Comissão estimada (65%): R$ {comissao_estimada:.2f}")
                 else:
-                    st.toast("Não foi possível identificar um preço claro.", icon="⚠️")
+                    st.toast("Dados não encontrados. Tente outro termo.", icon="⚠️")
 
     st.markdown("<h1 style='text-align: center;'>🤖 AGENTE DE ANÁLISE: ARBITRAGEM PRO</h1>", unsafe_allow_html=True)
     
@@ -74,24 +120,24 @@ def main():
             nome = col_search.text_input("Nome da Missão / Produto", key="nome_produto")
             col_btn.write("") # Espaçamento
             col_btn.write("") 
-            if col_btn.button("🔍 Pesquisar Preço", use_container_width=True):
-                 atualizar_precos()
+            if col_btn.button("🌍 Fetch Affiliate Data", use_container_width=True):
+                 atualizar_dados_afiliado()
 
             col1, col2 = st.columns([3, 1])
-            # nome já capturado acima, apenas logicamente mantendo estrutura se necessario, mas simplifiquei
+            # nome já capturado acima
             qtd = col2.number_input("Qtd", min_value=1, value=1)
 
         c1, c2 = st.columns(2)
         with c1:
-            st.markdown("<h3 style='text-align: center;'>💰 Estrutura de Custos</h3>", unsafe_allow_html=True)
-            p_compra = st.number_input("Preço Compra Un. (R$)", key="p_compra")
-            frete_entrada = st.number_input("Frete Entrada (Total R$)", value=0.0)
+            st.markdown("<h3 style='text-align: center;'>💰 Custos (Ads/CPA)</h3>", unsafe_allow_html=True)
+            p_compra = st.number_input("Custo por Venda/CPA (R$)", key="p_compra", help="Quanto você gasta em ADS para fazer uma venda?")
+            frete_entrada = st.number_input("Outros Custos (R$)", value=0.0)
         
         with c2:
-            st.markdown("<h3 style='text-align: center;'>📊 Parâmetros de Venda</h3>", unsafe_allow_html=True)
-            p_venda = st.number_input("Preço Venda Un. (R$)", key="p_venda")
-            taxa_plataforma = st.number_input("Taxa Plataforma (%)", value=12.0)
-            ads_percent = st.number_input("Publicidade/Ads (%)", value=5.0)
+            st.markdown("<h3 style='text-align: center;'>📊 Ganhos (Comissão)</h3>", unsafe_allow_html=True)
+            p_venda = st.number_input("Comissão por Venda (R$)", key="p_venda")
+            taxa_plataforma = st.number_input("Taxa Plataforma (%)", value=0.0, help="Geralmente 0 para afiliado (já descontado)")
+            ads_percent = st.number_input("Markup de Segurança (%)", value=0.0)
 
         # CÁLCULOS TÉCNICOS
         investimento_total = (p_compra * qtd) + frete_entrada
